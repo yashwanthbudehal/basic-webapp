@@ -2,11 +2,13 @@ pipeline {
     agent { label 'Dev' }
 
     environment {
-        DOCKER_IMAGE = "karthikeyareddy716/basic-webapp:${BUILD_NUMBER}"
-        TOMCAT_WEBAPPS = "/opt/tomcat9/webapps"
-        DOCKER_USERNAME = credentials('docker-hub-cred')  // Store in Jenkins credentials
-        DOCKER_PASSWORD = credentials('docker-hub-cred')
-    }
+    REGISTRY = "karthikeyareddy716"
+    IMAGE_NAME = "basic-webapp"
+    IMAGE_TAG = "${BUILD_NUMBER}"
+    DOCKER_IMAGE = "${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
+    TOMCAT_WEBAPPS = "/opt/tomcat9/webapps"
+}
+
 
     stages {
         stage('SCM Checkout') {
@@ -39,12 +41,14 @@ pipeline {
                     sh "docker build -t ${DOCKER_IMAGE} ."
         
                     echo "Logging into Docker registry..."
-                    sh "echo '${DOCKER_PASSWORD}' | docker login -u '${DOCKER_USERNAME}' --password-stdin"
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-cred', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
+                    }
         
                     echo "Pushing Docker image to registry..."
                     sh "docker push ${DOCKER_IMAGE}"
                 }
             }
-        }           
+        }
     }
 }
