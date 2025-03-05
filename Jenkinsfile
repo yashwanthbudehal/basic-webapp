@@ -4,6 +4,8 @@ pipeline {
     environment {
         DOCKER_IMAGE = "karthikeyareddy716/basic-webapp:${BUILD_NUMBER}"
         TOMCAT_WEBAPPS = "/opt/tomcat9/webapps"
+        DOCKER_USERNAME = credentials('docker-hub-cred')  // Store in Jenkins credentials
+        DOCKER_PASSWORD = credentials('docker-hub-cred')
     }
 
     stages {
@@ -32,11 +34,17 @@ pipeline {
 
         stage('Docker Build & Push') {
             steps {
-                sh """
-                    docker build -t ${DOCKER_IMAGE} .
-                    docker push ${DOCKER_IMAGE}
-                """
+                script {
+                    echo "Building Docker image..."
+                    sh "docker build -t ${DOCKER_IMAGE} ."
+        
+                    echo "Logging into Docker registry..."
+                    sh "echo '${DOCKER_PASSWORD}' | docker login -u '${DOCKER_USERNAME}' --password-stdin"
+        
+                    echo "Pushing Docker image to registry..."
+                    sh "docker push ${DOCKER_IMAGE}"
+                }
             }
-        }
+        }           
     }
 }
