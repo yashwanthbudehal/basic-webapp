@@ -2,6 +2,7 @@ pipeline {
     agent { label 'Dev' }
 
     environment {
+        BUILD_ARTIFACT = "basic-webapp-${BUILD_NUMBER}.war"
         TOMCAT_WEBAPPS = "/opt/tomcat11/webapps"
     }
 
@@ -14,7 +15,8 @@ pipeline {
 
         stage('Maven Build') {
             steps {
-                sh 'mvn clean package'
+                sh "mvn clean package -Drevision=${BUILD_NUMBER}"
+                sh "mv target/basic-webapp.war target/${BUILD_ARTIFACT}"
             }
         }
 
@@ -22,7 +24,7 @@ pipeline {
             steps {
                 sshagent(['agent1']) {
                     sh """
-                        scp -o StrictHostKeyChecking=no target/basic-webapp.war ubuntu@13.114.204.16:${TOMCAT_WEBAPPS}/
+                        scp -o StrictHostKeyChecking=no target/${BUILD_ARTIFACT} ubuntu@13.114.204.16:${TOMCAT_WEBAPPS}/
                         ssh ubuntu@13.114.204.16 "sudo systemctl restart tomcat11"
                     """
                 }
