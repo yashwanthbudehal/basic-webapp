@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         BUILD_ARTIFACT = "basic-webapp-${BUILD_NUMBER}.war"
-        TOMCAT_WEBAPPS = "/opt/tomcat11/webapps"
+        TOMCAT_WEBAPPS = "/opt/tomcat9/webapps"
     }
 
     stages {
